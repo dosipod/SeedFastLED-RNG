@@ -494,6 +494,15 @@ void WLED::setup()
   initServer();
   DEBUG_PRINT(F("heap ")); DEBUG_PRINTLN(ESP.getFreeHeap());
 
+  // Seed FastLED random functions with esp random value, which already has been seeded properly at this point.
+  // There doesn't seem to be a good, platform-agnostic way to get an unbounded true random value.
+#if defined(ARDUINO_ARCH_ESP32)
+  const uint32_t seed32 = esp_random();
+#else
+  const uint32_t seed32 = RANDOM_REG32;
+#endif
+  random16_set_seed((uint16_t)((seed32 & 0xFFFF) ^ (seed32 >> 16)));
+
   enableWatchdog();
 
   #if defined(ARDUINO_ARCH_ESP32) && defined(WLED_DISABLE_BROWNOUT_DET)
